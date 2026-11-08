@@ -14,6 +14,8 @@ TAR_OPTS=(--owner=0 --group=0 --numeric-owner --sort=name --mtime='2026-01-01 00
 
 # ---- fpk (manifest, icons, cmd/, config/, app.tgz)
 cp -r fnos/. build/fpk/
+# py_compile / imports leave bytecode next to sources; keep it out of the package
+find build/fpk -depth \( -type d -name __pycache__ -o -name '*.pyc' \) -exec rm -rf {} +
 sed -i -e '$a\' build/fpk/manifest
 sed -i "s/^version=.*/version=$VERSION/; /^checksum=/d" build/fpk/manifest
 chmod +x build/fpk/cmd/* build/fpk/app/dashboard.py
@@ -22,8 +24,9 @@ echo "checksum=$(md5sum build/fpk/app.tgz | cut -d' ' -f1)" >> build/fpk/manifes
 tar "${TAR_OPTS[@]}" -czf "dist/nasscreen-$VERSION.fpk" -C build/fpk manifest ICON.PNG ICON_256.PNG cmd config app.tgz
 
 # ---- Windows agent (batch files must be CRLF)
+# Copy named files only. `cp windows-agent/*` fails (exit 1) when __pycache__ exists.
 mkdir -p build/win
-cp windows-agent/* build/win/
+cp windows-agent/nasscreen_agent.py windows-agent/install.bat windows-agent/uninstall.bat windows-agent/README.txt build/win/
 for f in build/win/*.bat build/win/README.txt; do sed -i 's/\r$//; s/$/\r/' "$f"; done
 (cd build/win && zip -q -X "../../dist/nasscreen-windows-agent-$VERSION.zip" nasscreen_agent.py install.bat uninstall.bat README.txt)
 
