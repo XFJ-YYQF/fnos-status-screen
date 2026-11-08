@@ -11,6 +11,8 @@
 
 **Windows 概况**(装了配套 agent 且电脑开机时):系统、CPU(占用/频率/核心分布)、GPU(NVIDIA / 通用)、内存、网卡、各盘符、磁盘读写、进程排行、同样的 CPU/GPU 曲线,底部保留一行 NAS 简况。
 
+<img width="680" height="510" alt="HWk-gZCaYAAWf1-" src="https://github.com/user-attachments/assets/ef853484-67e5-4a3a-a5d4-a2a8c254143d" />
+
 ## 安装
 
 ### NAS 端
@@ -97,17 +99,6 @@ pip install psutil
 python tests/e2e.py          # 约 20 秒
 bash scripts/build.sh         # 输出到 dist/
 ```
-
-## 发布
-
-推送 `v*` 标签即可,GitHub Actions 会运行测试、打包并创建 Release(附 fpk、Windows agent zip 和 SHA256SUMS):
-
-```bash
-git tag v1.4.0
-git push origin v1.4.0
-```
-
-版本号取自标签(`v1.4.0` → `1.4.0`),会自动写入 manifest,无需手动改。也可以在 Actions 页手动触发 *Release* 做一次只产出构建文件(不发布)的试打包。
 
 ## 许可证
 
