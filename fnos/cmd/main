@@ -1,0 +1,40 @@
+#!/bin/bash
+APP="${TRIM_APPDEST:-$(cd "$(dirname "$0")/.." && pwd)}"
+VAR="${TRIM_PKGVAR:-/tmp}"
+PIDF="$VAR/nasscreen.pid"
+LOG="$VAR/nasscreen.log"
+GETTY="getty@tty1.service"
+export PATH="$PATH:/usr/sbin:/sbin:/usr/local/bin"
+export NASSCREEN_CONFIG="$VAR/config.json"
+
+is_running() { [ -f "$PIDF" ] && kill -0 "$(cat "$PIDF")" 2>/dev/null; }
+
+start() {
+  is_running && return 0
+  command -v python3 >/dev/null || { echo "python3 not found" >&2; return 1; }
+  systemctl mask --runtime "$GETTY" >/dev/null 2>&1   # stop logind from respawning login on tty1
+  systemctl stop "$GETTY" >/dev/null 2>&1
+  dmesg -n 1 2>/dev/null
+  nohup python3 "$APP/dashboard.py" >>"$LOG" 2>&1 &
+  echo $! >"$PIDF"
+  chvt 1 2>/dev/null
+  return 0
+}
+
+stop() {
+  if is_running; then
+    kill "$(cat "$PIDF")"
+    for _ in $(seq 20); do is_running || break; sleep 0.25; done
+    is_running && kill -9 "$(cat "$PIDF")"
+  fi
+  rm -f "$PIDF"
+  systemctl unmask --runtime "$GETTY" >/dev/null 2>&1
+  systemctl start "$GETTY" >/dev/null 2>&1
+}
+
+case "$1" in
+  start)  start; exit $? ;;
+  stop)   stop; exit 0 ;;
+  status) is_running && exit 0 || exit 3 ;;
+  *) exit 1 ;;
+esac

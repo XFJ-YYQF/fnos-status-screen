@@ -1,0 +1,7 @@
+dist/
+build/
+__pycache__/
+*.pyc
+agent.json
+agent.log
+error.log

@@ -1,0 +1,42 @@
+name: Release
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version for a test build, e.g. 1.4.0 (artifacts only, no release)"
+        required: false
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install psutil
+      - name: Syntax checks
+        run: |
+          python -m py_compile fnos/app/dashboard.py windows-agent/nasscreen_agent.py
+          bash -n fnos/cmd/main
+      - name: End-to-end smoke test
+        run: python tests/e2e.py
+      - name: Build packages
+        env:
+          VER: ${{ github.ref_type == 'tag' && github.ref_name || inputs.version }}
+        run: bash scripts/build.sh "$VER"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/*
+      - name: Publish GitHub Release
+        if: github.ref_type == 'tag'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          body_path: build/release-notes.md
+          generate_release_notes: true
+          fail_on_unmatched_files: true

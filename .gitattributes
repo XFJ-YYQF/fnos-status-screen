@@ -1,0 +1,8 @@
+* text=auto
+*.sh text eol=lf
+*.py text eol=lf
+fnos/cmd/* text eol=lf
+fnos/config/* text eol=lf
+fnos/manifest text eol=lf
+*.bat text eol=crlf
+*.png binary
